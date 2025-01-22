@@ -10,8 +10,8 @@ A full-stack web app for managing prescriptions with authentication, CRUD operat
 - **Axios**: API calls.
 
 ### Backend
-- **Spring Boot 3**: REST APIs, H2/SQLite DB.
-- **Spring Security**: Authentication/authorization.
+- **Spring Boot 3**: REST APIs, H2.
+- **Spring Security**: Authentication.
 - **SpringDoc OpenAPI**: Swagger UI for API docs.
 
 ## Features
@@ -38,13 +38,13 @@ A full-stack web app for managing prescriptions with authentication, CRUD operat
 
 ### Backend
 1. Clone the backend repository.
-2. Configure `application.properties` for H2/SQLite.
+2. Configure `application.properties` for H2.
 3. Run the application: `./mvnw spring-boot:run`.
 
 ### Frontend
 1. Clone the frontend repository.
 2. Install dependencies: `npm install`.
-3. Start the app: `npm start`.
+3. Start the app: `npm run dev`.
 
 ## Notes
 - Swagger UI requires public access via Spring Security configuration.
