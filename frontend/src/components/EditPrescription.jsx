@@ -6,7 +6,6 @@ const API_BASE_URL = "http://localhost:8080/api/v1/prescriptions";
 
 const EditPrescription = () => {
     const { id } = useParams(); // Get the prescription ID from the URL
-    console.log(id)
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -19,7 +18,7 @@ const EditPrescription = () => {
         nextVisitDate: "",
     });
 
-    const [error, setError] = useState("");
+    const [errors, setErrors] = useState({}); // To track field-specific errors
 
     // Fetch the existing prescription details
     useEffect(() => {
@@ -32,7 +31,7 @@ const EditPrescription = () => {
                 const data = await response.json();
                 setFormData(data);
             } catch (error) {
-                setError(error.message);
+                Swal.fire("Error", error.message, "error");
             }
         };
 
@@ -46,11 +45,58 @@ const EditPrescription = () => {
             ...prevFormData,
             [name]: value,
         }));
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            [name]: "", // Clear error when user starts editing
+        }));
+    };
+
+    // Validate fields
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.prescriptionDate) {
+            newErrors.prescriptionDate = "Prescription date is required.";
+        } else if (new Date(formData.prescriptionDate) > new Date()) {
+            newErrors.prescriptionDate = "Prescription date cannot be in the future.";
+        }
+
+        if (!formData.patientName.trim()) {
+            newErrors.patientName = "Patient name is required.";
+        }
+
+        if (!formData.patientAge) {
+            newErrors.patientAge = "Patient age is required.";
+        } else if (formData.patientAge < 0 || formData.patientAge > 120) {
+            newErrors.patientAge = "Patient age must be between 0 and 120.";
+        }
+
+        if (!formData.patientGender) {
+            newErrors.patientGender = "Patient gender is required.";
+        }
+
+        if (formData.nextVisitDate && formData.prescriptionDate) {
+            const prescriptionDate = new Date(formData.prescriptionDate);
+            const nextVisitDate = new Date(formData.nextVisitDate);
+
+            if (nextVisitDate <= prescriptionDate) {
+                newErrors.nextVisitDate =
+                    "Next visit date must be after the prescription date.";
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0; // Return true if no errors
     };
 
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
         try {
             const response = await fetch(`${API_BASE_URL}/${id}`, {
                 method: "PUT",
@@ -63,31 +109,17 @@ const EditPrescription = () => {
             if (!response.ok) {
                 throw new Error("Failed to update prescription");
             }
-            Swal.fire({
-                title: "Do you want to update the changes?",
-                showDenyButton: true,
-                showCancelButton: true,
-                confirmButtonText: "Update",
-                denyButtonText: `Don't update`
-            }).then((result) => {
-                /* Read more about isConfirmed, isDenied below */
-                if (result.isConfirmed) {
-                    Swal.fire("Updated!", "", "success");
-                    navigate("/prescriptions");
-                } else if (result.isDenied) {
-                    Swal.fire("Changes are not updated", "", "info");
-                }
-            });
-            // Redirect to the list of prescriptions
+
+            Swal.fire("Success", "Prescription updated successfully", "success");
+            navigate("/prescriptions");
         } catch (error) {
-            setError(error.message);
+            Swal.fire("Error", error.message, "error");
         }
     };
 
     return (
         <div className="max-w-xl mx-auto p-4 bg-white shadow-md rounded">
             <h1 className="text-xl font-bold mb-4">Edit Prescription</h1>
-            {error && <p className="text-red-500 mb-4">{error}</p>}
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-gray-700">Prescription Date</label>
@@ -96,9 +128,13 @@ const EditPrescription = () => {
                         name="prescriptionDate"
                         value={formData.prescriptionDate}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className={`w-full p-2 border rounded ${errors.prescriptionDate ? "border-red-500" : ""
+                            }`}
                         required
                     />
+                    {errors.prescriptionDate && (
+                        <p className="text-red-500 text-sm">{errors.prescriptionDate}</p>
+                    )}
                 </div>
                 <div>
                     <label className="block text-gray-700">Patient Name</label>
@@ -107,9 +143,13 @@ const EditPrescription = () => {
                         name="patientName"
                         value={formData.patientName}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className={`w-full p-2 border rounded ${errors.patientName ? "border-red-500" : ""
+                            }`}
                         required
                     />
+                    {errors.patientName && (
+                        <p className="text-red-500 text-sm">{errors.patientName}</p>
+                    )}
                 </div>
                 <div>
                     <label className="block text-gray-700">Patient Age</label>
@@ -118,10 +158,15 @@ const EditPrescription = () => {
                         name="patientAge"
                         value={formData.patientAge}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className={`w-full p-2 border rounded ${errors.patientAge ? "border-red-500" : ""
+                            }`}
                         required
                         min="0"
+                        max="120"
                     />
+                    {errors.patientAge && (
+                        <p className="text-red-500 text-sm">{errors.patientAge}</p>
+                    )}
                 </div>
                 <div>
                     <label className="block text-gray-700">Patient Gender</label>
@@ -129,7 +174,8 @@ const EditPrescription = () => {
                         name="patientGender"
                         value={formData.patientGender}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className={`w-full p-2 border rounded ${errors.patientGender ? "border-red-500" : ""
+                            }`}
                         required
                     >
                         <option value="">Select Gender</option>
@@ -137,6 +183,9 @@ const EditPrescription = () => {
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
                     </select>
+                    {errors.patientGender && (
+                        <p className="text-red-500 text-sm">{errors.patientGender}</p>
+                    )}
                 </div>
                 <div>
                     <label className="block text-gray-700">Diagnosis</label>
@@ -163,17 +212,19 @@ const EditPrescription = () => {
                         name="nextVisitDate"
                         value={formData.nextVisitDate}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className={`w-full p-2 border rounded ${errors.nextVisitDate ? "border-red-500" : ""
+                            }`}
                     />
+                    {errors.nextVisitDate && (
+                        <p className="text-red-500 text-sm">{errors.nextVisitDate}</p>
+                    )}
                 </div>
-                <div>
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-                    >
-                        Update Prescription
-                    </button>
-                </div>
+                <button
+                    type="submit"
+                    className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+                >
+                    Update Prescription
+                </button>
             </form>
         </div>
     );

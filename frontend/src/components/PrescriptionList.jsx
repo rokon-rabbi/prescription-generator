@@ -4,10 +4,21 @@ import { deletePrescription, getPrescriptions } from '../services/prescriptionSe
 import Swal from 'sweetalert2';
 
 const PrescriptionList = () => {
-    const [prescriptions, setPrescriptions] = useState([]);
-    const [startDate, setStartDate] = useState('2025-01-20'); // default start date
-    const [endDate, setEndDate] = useState('2025-02-20');  // default end date
     const navigate = useNavigate();
+
+    // Function to get the first and last date of the current month
+    const getCurrentMonthDates = () => {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        return { firstDay, lastDay };
+    };
+
+    const { firstDay, lastDay } = getCurrentMonthDates();
+
+    const [prescriptions, setPrescriptions] = useState([]);
+    const [startDate, setStartDate] = useState(firstDay);
+    const [endDate, setEndDate] = useState(lastDay);
 
     // Fetch prescriptions whenever startDate or endDate changes
     useEffect(() => {
@@ -16,7 +27,6 @@ const PrescriptionList = () => {
 
     const fetchPrescriptions = async () => {
         try {
-            // Make sure we pass valid dates
             const data = await getPrescriptions(startDate, endDate);
             setPrescriptions(data);
         } catch (error) {
@@ -25,7 +35,6 @@ const PrescriptionList = () => {
     };
 
     const handleDelete = async (id) => {
-        // Show SweetAlert2 confirmation dialog
         Swal.fire({
             title: "Are you sure?",
             text: "You won't be able to revert this!",
@@ -37,13 +46,8 @@ const PrescriptionList = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    // Perform the delete action
                     await deletePrescription(id);
-
-                    // Re-fetch prescriptions after successful deletion
                     fetchPrescriptions();
-
-                    // Show success message
                     Swal.fire({
                         title: "Deleted!",
                         text: "Your prescription has been deleted.",
@@ -51,7 +55,6 @@ const PrescriptionList = () => {
                     });
                 } catch (error) {
                     console.error('Error deleting prescription:', error);
-                    // Show error message
                     Swal.fire({
                         title: "Error!",
                         text: "Failed to delete prescription. Please try again.",
@@ -62,10 +65,8 @@ const PrescriptionList = () => {
         });
     };
 
-
     return (
         <div className="container mx-auto p-4">
-            {/* "Create Prescription" button */}
             <div className="mb-4">
                 <button
                     onClick={() => navigate('create')}
