@@ -15,26 +15,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http.csrf().disable()
-//                .authorizeHttpRequests()
-//                .requestMatchers("/api/users/register", "/api/users/login", "/api/v1/prescriptions","/h2-console/**").permitAll()
-//                .anyRequest().authenticated()
-//                .and()
-//                .formLogin().loginPage("/login").defaultSuccessUrl("/prescriptions", true)
-//                .and()
-//                .logout().logoutUrl("/logout").logoutSuccessUrl("/login")
-//                .and()
-//                .headers().frameOptions().disable();
-//
-//        return http.build();
-//    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .requestMatchers("/api/users/register", "/api/users/login","/swagger-ui/**",  // Allow Swagger UI resources
+                .requestMatchers("/api/users/register", "/api/users/login", "/swagger-ui/**",  // Allow Swagger UI resources
                         "/v3/api-docs/**", // Allow OpenAPI JSON endpoint
                         "/swagger-ui.html", "/api/v1/prescriptions/**", "/h2-console/**")
                 .permitAll()

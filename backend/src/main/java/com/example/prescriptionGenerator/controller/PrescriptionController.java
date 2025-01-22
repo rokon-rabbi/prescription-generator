@@ -23,12 +23,14 @@ public class PrescriptionController {
     public PrescriptionController(PrescriptionRepository prescriptionRepository) {
         this.prescriptionRepository = prescriptionRepository;
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<Prescription> getPrescriptionById(@PathVariable Long id) {
         Prescription prescription = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prescription not found"));
         return ResponseEntity.ok(prescription);
     }
+
     @GetMapping
     public List<Prescription> getPrescriptions(
             @RequestParam(value = "startDate", required = false)
